@@ -26,6 +26,8 @@ function play(id) {
   });
 }
 
+var socket = io(clientSettings.wsuri);
+
 function init()
 {
   var preload;
@@ -34,8 +36,6 @@ function init()
 
   var maxcredits = 5;
   $('#credits').attr('aria-valuemax', maxcredits);
-
-  var socket = io(clientSettings.wsuri);
 
   if (!createjs.Sound.initializeDefaultPlugins()) {
     document.getElementById("error").style.display = "block";

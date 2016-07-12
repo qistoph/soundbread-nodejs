@@ -5,6 +5,43 @@ function recStatus(msg) {
 var audio_context;
 var recorder;
 
+function startRecording() {
+  if(recorder) {
+    recorder.record();
+    recStatus('Recording...');
+  }
+}
+
+function abortRecording(button) {
+  if(recorder) {
+    recorder.stop();
+    recStatus('Recording aborted.');
+  }
+}
+
+function createDownloadLink() {
+  if(recorder) {
+    recorder.exportWAV(function(b64data) {
+      recStatus('Sending...');
+      console.log("< playrec: [data]");
+      socket.emit('playrec', b64data);
+      recStatus('Done');
+    });
+  }
+}
+
+function stopRecording(button) {
+  if(recorder) {
+    recorder.stop();
+    recStatus('Stopped recording.');
+
+    // create WAV download link using audio data blob
+    createDownloadLink();
+
+    recorder.clear();
+  }
+}
+
 function startUserMedia(stream) {
   var input = audio_context.createMediaStreamSource(stream);
   console.debug('Media stream created.' );
@@ -18,40 +55,9 @@ function startUserMedia(stream) {
     numChannels: 1
   });
   console.debug('Recorder initialised.');
-
-  startRecording();
 }
 
-function startRecording() {
-  recorder && recorder.record();
-  recStatus('Recording...');
-}
-
-function abortRecording(button) {
-  recorder && recorder.stop();
-  recStatus('Recording aborted.');
-}
-
-function stopRecording(button) {
-  recorder && recorder.stop();
-  recStatus('Stopped recording.');
-
-  // create WAV download link using audio data blob
-  createDownloadLink();
-
-  recorder.clear();
-}
-
-function createDownloadLink() {
-  recorder && recorder.exportWAV(function(b64data) {
-    recStatus('Sending...');
-    console.log("< playrec: [data]");
-    socket.emit('playrec', b64data);
-    recStatus('Done');
-  });
-}
-
-function initRecorder(startRecording = false) {
+function initRecorder(autostartRecording) {
   try {
     // webkit shim
     window.AudioContext = window.AudioContext || window.webkitAudioContext;
@@ -61,17 +67,24 @@ function initRecorder(startRecording = false) {
         navigator.msGetUserMedia);
     window.URL = window.URL || window.webkitURL;
 
-    audio_context = new AudioContext;
+    audio_context = new AudioContext();
     console.debug('Audio context set up.');
     console.debug('navigator.getUserMedia ' + (navigator.getUserMedia ? 'available.' : 'not present!'));
   } catch (e) {
-    alert('No web audio support in this browser!');
+    window.alert('No web audio support in this browser!');
   }
 
-  navigator.getUserMedia({audio: true}, startUserMedia, function(e) {
-    alert('No live audio input: ' + e);
-    console.debug(e)
-  });
+  navigator.getUserMedia({audio: true}, 
+    function(stream) {
+      startUserMedia(stream);
+      if(autostartRecording) {
+        startRecording();
+      }
+    },
+    function(e) {
+      window.alert('No live audio input: ' + e);
+      console.debug(e)
+    });
 }
 
 $(document).ready(function() {

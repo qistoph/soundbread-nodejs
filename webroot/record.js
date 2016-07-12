@@ -95,11 +95,14 @@ $(document).ready(function() {
     snd.play();
   });
 
+  var initialized = false;
   $('#btnRecord').mousedown(function() {
-    $('#btnRecord').mousedown(function() {
+    if(!initialized) {
+      initRecorder(true);
+    } else {
       startRecording();
-    });
-    initRecorder(true);
+    }
+    initialized = true;
   });
 
   $('#btnRecord').mouseup(function() {

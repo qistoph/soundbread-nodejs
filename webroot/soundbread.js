@@ -27,6 +27,8 @@ function play(id) {
 }
 
 var socket = io(clientSettings.wsuri);
+var userid;
+var hiddenid;
 
 function init()
 {
@@ -88,9 +90,11 @@ function init()
     sounddiv.click(function() {
       var self = this;
       var id = $(self).attr('id');
-      console.log("< " + id);
 
-      socket.emit('play',id);
+      var playData = {soundId: id, hiddenid: hiddenid};
+      console.log(playData);
+      console.log("< play " + playData.soundId);
+      socket.emit('play', playData);
     });
 
   });
@@ -117,7 +121,6 @@ function init()
   });
 
   socket.on("reconnect", function() {
-    var hiddenid = localStorage.getItem('hiddenid');
     socket.emit('hiddenid', hiddenid);
 
     var userid = localStorage.getItem('userid');
@@ -168,7 +171,7 @@ function init()
     socket.emit('name', name);
   }
 
-  var hiddenid = localStorage.getItem('hiddenid');
+  hiddenid = localStorage.getItem('hiddenid');
   if(hiddenid === null) {
     var chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
     hiddenid = "";
@@ -179,7 +182,7 @@ function init()
   }
   socket.emit('hiddenid', hiddenid);
 
-  var userid = localStorage.getItem('userid');
+  userid = localStorage.getItem('userid');
   if(userid === null) {
     userid = "Gebruiker "+Math.floor(Math.random()*10000+9999);
   }
